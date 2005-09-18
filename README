@@ -1,0 +1,154 @@
+--------
+YORICK-Z
+--------
+
+This is a compiled add-on for yorick (an interpreted computer language
+specialized for numerical and scientific problems).  Yorick-z adds
+support for zlib (the data compression system used by gzip), png (a
+lossless image compression format), jpeg (a lossy image compression
+format), and mpeg (mpeg1, a compressed video format).  These are not
+supported in the basic yorick distribution, because each relies on a
+specialized library beyond what is required for basic yorick
+functionality.  (On Unix systems, yorick requires only libc, libm, and
+libX11.  On Windows systems, yorick requires only dlls which ship with
+every Windows system.)
+
+The specific dependencies for yorick-z are:
+
+   libz         http://www.zlib.org or http://www.gzip.org/zlib/
+     - compression scheme used by gzip (.gz files)
+   libpng       http://www.libpng.org/pub/png/
+                  also ftp://ftp.uu.net/graphics/png
+     - .png image files, depends on libz
+   libjpeg      http://www.ijg.org/
+                  also ftp://ftp.uu.net/graphics/jpeg/
+     - .jpg image files
+   libavcodec   http://ffmpeg.sourceforge.net/
+     - .mpg video files
+
+The APIs for these packages are not completely stable.  The yorick-z
+package will work with the following versions:
+
+   zlib    >= 1.1.4
+   libpng  >= 1.2.8  (>=1.2.2 on little endian machines, eg pentium)
+   libjpeg >= 6b
+   ffmpeg  = 0.4.8 or 0.4.9-pre1  (particularly unstable API)
+
+The yorick-z package supports zlib compression and decompression, both
+reading and writing of png and jpeg images, and only writing of mpeg1
+video movies.  You can configure yorick-z to build any one or all of
+these packages, so you do not need to have, for example, libz, libpng,
+or libavcodec to build a version of yorick with jpeg support.
+
+Ordinarily, any of these libraries would be present on a system as a
+shared library, which will be dynamically linked to yorick at runtime.
+However, you are free to link any of them statically.  The libz,
+libpng, and libjpeg shared libraries are tolerably widespread, since
+most web browsers use those libraries.
+
+However, at this writing, libavcodec (ffmpeg) is relatively rare, that
+is, you will likely need to make a special effort to acquire and
+install it on your system if you want the yorick-z mpeg1 support.  In
+recognition of this fact, yorick-z allows you a third option for
+libavcodec, in addition to either a static link, or a build-time link
+to a shared library: Namely, you can configure yorick-z to dlopen
+libavcodec at the first reference to any of the mpeg1 functionality.
+That is, you can build yorick-z in such a way that the mpeg1
+functionality becomes available when you install libavcodec, but the
+other parts of yorick-z all work properly if you don't have
+libavcodec.  (Note: This does not work under MacOS X.)
+
+-----------------
+BUILDING YORICK-Z
+-----------------
+
+To build yorick-z, unpack it, cd into the top-level directory, and type:
+
+   ./configure
+   make
+
+To test the package, type:
+
+   make check
+
+To install the package, type (as root):
+
+   make install
+
+Before you do any of this, you need a working yorick that is on your
+PATH (e.i.- so that when you type "yorick" at a command shell prompt,
+the code starts).  You also need to have installed zlib (the libz
+library), libpng, and libjpeg.  If libavcodec (part of ffmpeg) is not
+installed, then yorick-z mpeg support will not work until it is
+installed.  The absence of either the headers or libraries for the
+other packages will result in them being omitted entirely during the
+build.  See the LIBAVCODEC (mpeg1) section below for detailed description
+of the configuration options for that library.
+
+If the libraries or headers are not installed in a standard place
+($prefix/include for headers and $prefix/lib for libraries, where
+$prefix is /usr, /usr/local, or /sw), then you can use the --zlib,
+--png, --jpeg, or --avcodec options to ./configure to point the script
+to the directories where you built those libraries:
+
+Usage:   ./configure [options]
+Options are one or more of:
+  --yorick=/path/to/yorick
+      set path to yorick executable (if not on your PATH)
+  --zlib=/path/to/zlib-version
+      set path to directory containing zlib.h and libz.a
+  --png=/path/to/png-version
+      set path to directory containing png.h and libpng.a
+  --jpeg=/path/to/jpeg-version
+      set path to directory containing jpeglib.h and libjpeg.a
+  --avcodec=/path/to/ffmpeg-version/libavcodec
+      set path to directory containing avcodec.h and libavcodec.a
+  --dl-avcodec
+      use dlopen to link to libavcodec at runtime
+  --no-avcodec
+      skip libavcodec (mpeg1) support entirely
+  --a
+      generate /path/to/pkg/libpkg.a on load line instead of
+      the default -L/path/to/pkg -lpkg
+      This is the only way to force a particular static library
+      to be loaded on some platforms (e.g.- MacOS X).
+
+Note that the --zlib, --png, --jpeg, and --avcodec options presume
+that you have built, but NOT installed those packages.  That is, the
+paths are the names of the directories in your source tree.  Of
+course, if you install them in a standard place like /usr/lib or
+/usr/local/lib, you don't need these options at all.
+
+If you need even finer control than this (for example, to separately
+specify directory paths for header and library files), you can set
+environment variables before running configure (read the configure
+script for details), or edit Makeyorz by hand after running configure.
+
+---------------------------------
+LIBAVCODEC (mpeg1) dlopen support
+---------------------------------
+
+The configure script will assume you want dlopen support for
+libavcodec, which does not require any headers at build time, will
+work at runtime if libavcodec.so is installed, and fail gracefully
+only when you attempt to actually create an mpeg movie, if
+libavcodec.so has not been installed.
+
+If you later install the libavcodec shared library in a non-standard
+place (not /usr/lib, /usr/local/lib, nor /sw/lib), you may place the
+library in Y_HOME/lib (type Y_HOME in yorick to discover that
+directory path).  If you are unable to do that, as a last resort, you
+may place the path name of the libavcodec shared library, minus its
+file extension (.so, .sl, or .dylib) in the Y_LIBAVCODEC environment
+variable.
+
+You can also force the configure script to try to link libavcodec at
+build time, as it does for libz, libpng, and libjpeg.  To do this,
+use any one of the following configure options:
+
+   --avcodec=/path/to/ffmpeg-version/libavcodec
+       link to specified libavcodec at build time
+   --dl-avcodec
+       link to installed libavcodec at runtime
+   --no-avcodec
+       omit libavcodec (mpeg1) support, even if libavcodec present

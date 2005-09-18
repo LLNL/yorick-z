@@ -1,0 +1,482 @@
+#!/bin/sh
+# $Id: configure,v 1.1 2005-09-18 22:07:11 dhmunro Exp $
+
+echo ""
+echo "================ begin yorick-z configuration ===================="
+echo ""
+
+# note: ZLIB_INC, ZLIB_LIB, PNG_INC, PNG_LIB, JPEG_INC, JPEG_LIB,
+#       AVCODEC_INC, AVCODEC_LIB
+# environment variables can be used to set detailed default values
+# --zlib=, --png=, --jpeg=, --avcodec= command line options are designed
+# for the simple case in which the library has been built in place from
+# its source distribution and NOT installed
+
+curdate=`date`
+cursystem=`uname -a`
+fatality=0
+
+# should LD_LIBRARY_PATH, LIBPATH (AIX), LPATH, SHLIB_PATH (HPUX) be saved?
+
+yorick_exe="yorick"
+zlib_path=
+png_path=
+jpeg_path=
+av_path=
+av_dlopen="no"
+debug="no"
+use_a="no"
+for opt do
+  case "$opt" in
+  --debug) debug="yes"
+  ;;
+  --yorick=*) yorick_exe=`echo $opt | sed -e s/--yorick=//`
+  ;;
+  --zlib=*) zlib_path=`echo $opt | sed -e s/--zlib=//`
+  ;;
+  --png=*) png_path=`echo $opt | sed -e s/--png=//`
+  ;;
+  --jpeg=*) jpeg_path=`echo $opt | sed -e s/--jpeg=//`
+  ;;
+  --avcodec=*) av_path=`echo $opt | sed -e s/--avcodec=//`
+  ;;
+  --dl-avcodec) av_dlopen="yes"
+  ;;
+  --no-avcodec) av_dlopen="skip"
+  ;;
+  --a) use_a="yes"
+  ;;
+  *) cat <<EOF
+Usage:   ./configure [options]
+Options are one or more of:
+  --yorick=/path/to/yorick
+      set path to yorick executable (if not on your PATH)
+  --zlib=/path/to/zlib-version
+      set path to directory containing zlib.h and libz.a (uninstalled)
+  --png=/path/to/png-version
+      set path to directory containing png.h and libpng.a (uninstalled)
+  --jpeg=/path/to/jpeg-version
+      set path to directory containing jpeglib.h and libjpeg.a (uninstalled)
+  --avcodec=/path/to/ffmpeg-version/libavcodec
+      set path to directory containing avcodec.h and libavcodec.a (uninstalled)
+  --dl-avcodec    search for libavcodec (ffmpeg) at runtime
+      (allows code to work if not present, default if configure does
+       not find libavcodec, overrides --avcodec=)
+EOF
+  exit 1
+  ;;
+  esac
+done
+
+rm -f cfg.* ycode.* yinit.* ywrap.*
+rm -f core a.out *.o *.a *.so *.sl *.dylib *.dll *~ '#'*
+rm -f yorick Makeyorz yorz.i test*.mpg test*.jpg test*.png cfg*
+
+case "$yorick_exe" in
+  */*)
+    if test -x "$yorick_exe" -a ! -d "$yorick_exe"; then
+      Y_BINDIR=`dirname "$yorick_exe"`
+    fi
+  ;;
+  *)
+    save_IFS=$IFS
+    IFS=:
+    for d in `echo "$PATH" | sed -e 's/^:/.:/' -e 's/::/:.:/g' -e 's/:$/:./'`
+    do
+      if test -x "$d/$yorick_exe" -a ! -d "$d/$yorick_exe"; then
+        Y_BINDIR="$d"
+        yorick_exe="$d/$yorick_exe"
+        break;
+      fi
+    done
+    IFS=$save_IFS
+  ;;
+esac
+
+"$yorick_exe" -batch make.i
+
+Y_HOME=`grep '^Y_MAKEDIR=' ./Makefile | sed -e 's/^Y_MAKEDIR=//'`
+# try to handle escaped blanks in Y_MAKEDIR
+Y_HOME=`echo $Y_HOME | sed -e 's/\\\\ / /g'`
+
+CC=`grep '^CC=' "${Y_HOME}/Make.cfg" | sed -e 's/^CC=//'`
+CFLAGS=`grep '^Y_CFLAGS=' "${Y_HOME}/Make.cfg" | sed -e 's/^Y_CFLAGS=//'`
+LDFLAGS=`grep '^Y_LDFLAGS=' "${Y_HOME}/Make.cfg" | sed -e 's/^Y_LDFLAGS=//'`
+PLUG_UDL=`grep '^PLUG_UDL=-D' "${Y_HOME}/Make.cfg" | sed -e 's/^PLUG_UDL=-D//'`
+if test "x$PLUG_UDL" = xPLUG_UNSUPPORTED; then
+  PLUG_UDL=""
+fi
+
+if test -z "$PLUG_UDL"; then
+  if test $av_dlopen = yes; then
+    echo "WARNING: dlopen not supported by $yorick_exe"
+  fi
+  av_dlopen=no
+  DEFAULT_TARGET='$(THIS_EXE)'
+  DEFAULT_INSTALL=install-exe
+  DEFAULT_CHECK=check-exe
+  Y_PLUG=
+else
+  DEFAULT_TARGET='$(THIS_L)$(PLUG_SFX)'
+  DEFAULT_INSTALL=install-plug
+  DEFAULT_CHECK=check-plug
+  Y_PLUG='$(PLUG_PIC)'
+fi
+
+echo Using ${Y_HOME}/Make.cfg
+echo   CC=$CC
+echo   CFLAGS=$CFLAGS
+echo   LDFLAGS=$LDFLAGS
+
+CFLAGS="$CFLAGS"
+LDFLAGS="$LDFLAGS"
+
+need_lm=no
+
+# list of places to look for headers, libraries
+plist="/sw /usr/local"
+
+#------------------------------------------------------------------------
+# find zlib header and library
+cat >cfg.c <<EOF
+#include "zlib.h"
+int main(int argc, char *argv[])
+{
+  z_stream zs;
+  int flag = deflateInit(&zs, Z_DEFAULT_COMPRESSION);
+  unsigned char data[4], result[256];
+  zs.next_in = data;
+  zs.avail_in = 4;
+  zs.next_out = result;
+  zs.avail_out = 256;
+  flag = deflate(&zs, Z_FINISH);
+  deflateEnd(&zs);
+  return 0;
+}
+EOF
+
+# unless ZLIB_INC or ZLIB_LIB environment variables set, they will be blank
+if test -n "$zlib_path"; then
+  ZLIB_INC="-I$zlib_path"
+  if test $use_a = "yes" -a -r "$zlib_path/libz.a"; then
+    ZLIB_LIB="$zlib_path/libz.a"
+  else
+    ZLIB_LIB="-L$zlib_path -lz"
+  fi
+else
+  ZLIB_LIB=-lz
+fi
+ZLIB_INC0="$ZLIB_INC"
+
+found="no"
+if $CC $CFLAGS $ZLIB_INC -o cfg cfg.c $ZLIB_LIB >cfg.0 2>&1; then
+  found="yes"
+else
+  if test -n "$zlib_path"; then
+    echo "WARNING: --zlib=$zlib_path DID NOT WORK, IS IT BUILT?"
+  fi
+  for p in $plist; do
+    ZLIB_INC=-I$p/include
+    ZLIB_LIB="-L$p/lib -lz"
+    if $CC $CFLAGS $ZLIB_INC -o cfg cfg.c $ZLIB_LIB >cfg.1 2>&1; then
+      found="yes"
+      break
+    fi
+  done
+fi
+if test $found = no; then
+  has_zlib=no
+  echo "zlib: not found"
+  ZLIB_INC=
+  ZLIB_LIB=
+  ILIST=
+  OLIST=
+else
+  has_zlib=yes
+  echo "zlib: found"
+  echo "  ZLIB_INC=$ZLIB_INC"
+  echo "  ZLIB_LIB=$ZLIB_LIB"
+  ZLIB_INC0=$ZLIB_INC
+  ILIST=zlib.i
+  OLIST=yzlib.o
+fi
+
+#------------------------------------------------------------------------
+# find png header and library
+cat >cfg.c <<EOF
+#include "png.h"
+int main(int argc, char *argv[])
+{
+  png_structp p = png_create_read_struct_2(PNG_LIBPNG_VER_STRING,
+      0, 0, 0, 0, 0, 0);
+  png_infop pi = png_create_info_struct(p);
+  png_destroy_read_struct(&p, &pi, 0);
+  return 0;
+}
+EOF
+
+# unless PNG_INC or PNG_LIB environment variables set, they will be blank
+if test -n "$png_path"; then
+  PNG_INC=-I$png_path
+  if test $use_a = "yes" -a -r "$png_path/libpng.a"; then
+    PNG_LIB="$png_path/libpng.a"
+  else
+    PNG_LIB="-L$png_path -lpng"
+  fi
+else
+  PNG_LIB=-lpng
+fi
+
+libs="$PNG_LIB $ZLIB_LIB -lm"
+found="no"
+if $CC $CFLAGS $PNG_INC $ZLIB_INC0 -o cfg cfg.c $libs >cfg.2 2>&1; then
+  found="yes"
+else
+  if test -n "$png_path"; then
+    echo "WARNING: --png=$png_path DID NOT WORK, IS IT BUILT?"
+  fi
+  for p in $plist; do
+    PNG_INC=-I$p/include
+    PNG_LIB="-L$p/lib -lpng"
+    libs="$PNG_LIB $ZLIB_LIB -lm"
+    if $CC $CFLAGS $PNG_INC $ZLIB_INC0 -o cfg cfg.c $libs >cfg.3 2>&1; then
+      found="yes"
+      break
+    fi
+  done
+fi
+if test $found = no; then
+  has_png=no
+  echo "png: not found"
+  PNG_INC=
+  PNG_LIB=
+else
+  has_png=yes
+  need_lm=yes
+  echo "png: found"
+  if test "$PNG_INC" != "$ZLIB_INC0"; then
+    PNG_INC="$PNG_INC $ZLIB_INC0"
+  fi
+  echo "  PNG_INC=$PNG_INC"
+  echo "  PNG_LIB=$PNG_LIB"
+  ILIST="png.i $ILIST"
+  OLIST="ypng.o spng.o $OLIST"
+fi
+
+#------------------------------------------------------------------------
+# find jpeg header and library
+cat >cfg.c <<EOF
+#include <stdio.h>
+#include "jpeglib.h"
+int main(int argc, char *argv[])
+{
+  struct jpeg_decompress_struct jpeg;
+  jpeg_create_decompress(&jpeg);
+  jpeg_stdio_src(&jpeg, 0);
+  jpeg_destroy_decompress(&jpeg);
+  return 0;
+}
+EOF
+
+# unless JPEG_INC or JPEG_LIB environment variables set, they will be blank
+if test -n "$jpeg_path"; then
+  JPEG_INC=-I$jpeg_path
+  if test $use_a = "yes" -a -r "$jpeg_path/libjpeg.a"; then
+    JPEG_LIB="$jpeg_path/libjpeg.a"
+  else
+    JPEG_LIB="-L$jpeg_path -ljpeg"
+  fi
+else
+  JPEG_LIB=-ljpeg
+fi
+
+libs="$JPEG_LIB"
+found="no"
+if $CC $CFLAGS $JPEG_INC -o cfg cfg.c $libs >cfg.4 2>&1; then
+  found="yes"
+else
+  if test -n "$jpeg_path"; then
+    echo "WARNING: --jpeg=$jpeg_path DID NOT WORK, IS IT BUILT?"
+  fi
+  for p in $plist; do
+    JPEG_INC=-I$p/include
+    JPEG_LIB="-L$p/lib -ljpeg"
+    libs="$JPEG_LIB"
+    if $CC $CFLAGS $JPEG_INC -o cfg cfg.c $libs >cfg.5 2>&1; then
+      found="yes"
+      break
+    fi
+  done
+fi
+if test $found = no; then
+  has_jpeg=no
+  echo "jpeg: not found"
+  JPEG_INC=
+  JPEG_LIB=
+else
+  has_jpeg=yes
+  echo "jpeg: found"
+  echo "  JPEG_INC=$JPEG_INC"
+  echo "  JPEG_LIB=$JPEG_LIB"
+  ILIST="jpeg.i $ILIST"
+  OLIST="yjpeg.o $OLIST"
+fi
+
+#------------------------------------------------------------------------
+if test $av_dlopen != skip; then
+
+# find avcodec header and library
+cat >cfg.c <<EOF
+#include "avcodec.h"
+int main(int argc, char *argv[])
+{
+  AVCodec *codec;
+  AVCodecContext *c;
+  avcodec_init();
+  register_avcodec(&mpeg1video_encoder);
+  codec = avcodec_find_encoder(CODEC_ID_MPEG1VIDEO);
+  c = avcodec_alloc_context();
+  avcodec_close(c);
+  return 0;
+}
+EOF
+
+# unless AVCODEC_INC or AVCODEC_LIB env variables set, they will be blank
+if test -n "$av_path"; then
+  AVCODEC_INC=-I$av_path
+  if test $use_a = "yes" -a -r "$av_path/libavcodec.a"; then
+    AVCODEC_LIB="$av_path/libavcodec.a"
+  else
+    AVCODEC_LIB="-L$av_path -lavcodec"
+  fi
+  av_dlopen=no
+else
+  AVCODEC_LIB=-lavcodec
+fi
+
+libs="$AVCODEC_LIB -lm"
+found="no"
+if $CC $CFLAGS $AVCODEC_INC -o cfg cfg.c $libs >cfg.6 2>&1; then
+  found="yes"
+else
+  if test -n "$av_path"; then
+    echo "WARNING: --avcodec=$av_path DID NOT WORK, IS IT BUILT?"
+  fi
+  for p in $plist; do
+    AVCODEC_INC=-I$p/include
+    AVCODEC_LIB="-L$p/lib -lavcodec"
+    libs="$AVCODEC_LIB -lm"
+    if $CC $CFLAGS $AVCODEC_INC -o cfg cfg.c $libs >cfg.7 2>&1; then
+      found="yes"
+      break
+    fi
+  done
+fi
+
+if test $av_dlopen = yes; then
+  has_avcodec=dlopen
+  if test $found = no; then
+    echo "avcodec: not found, will try dlopen at runtime"
+  else
+    echo "avcodec: found, but will try dlopen at runtime"
+  fi
+  AVCODEC_INC="-DYAVC_SHARED"
+  AVCODEC_LIB=
+  ILIST="mpeg.i $ILIST"
+  OLIST="ympeg.o $OLIST"
+elif test $found = no; then
+  has_avcodec=no
+  echo "avcodec: not found"
+  AVCODEC_INC=
+  AVCODEC_LIB=
+else
+  has_avcodec=yes
+  need_lm=yes
+  echo "avcodec: found"
+  echo "  AVCODEC_INC=$AVCODEC_INC"
+  echo "  AVCODEC_LIB=$AVCODEC_LIB"
+  ILIST="mpeg.i $ILIST"
+  OLIST="ympeg.o $OLIST"
+fi
+
+else
+has_avcodec=no
+fi
+#----------------------------------------------------------------------
+
+rm -f yorz.i
+cat >yorz.i <<EOF
+/*
+ * yorz.i - generated by yorick-z configure script
+ * autoloads for yorick-z package
+ */
+
+EOF
+
+if test $has_zlib = yes; then
+  cat >>yorz.i <<EOF
+autoload, "zlib.i", z_deflate, z_inflate, z_flush, z_setdict, z_crc32;
+EOF
+fi
+
+if test $has_png = yes; then
+  DEPLIBS="$PNG_LIB $ZLIB_LIB"
+  cat >>yorz.i <<EOF
+autoload, "png.i", png_read, png_write, png_scale, png_map, png_pcal;
+EOF
+elif test $has_zlib = yes; then
+  DEPLIBS="$ZLIB_LIB"
+else
+  DEPLIBS=""
+fi
+if test $has_jpeg = yes; then
+  DEPLIBS="$JPEG_LIB $DEPLIBS"
+  cat >>yorz.i <<EOF
+autoload, "jpeg.i", jpeg_read, jpeg_write;
+EOF
+fi
+if test $has_avcodec = yes; then
+  DEPLIBS="$AVCODEC_LIB $DEPLIBS"
+  cat >>yorz.i <<EOF
+autoload, "mpeg.i", mpeg_create, mpeg_write, mpeg_close, mpeg_movie;
+EOF
+fi
+#if test $need_lm = yes; then
+#  DEPLIBS="$DEPLIBS -lm"
+#fi
+
+cat >Makeyorz <<EOF
+# Makeyorz configure results for yorick-z
+# generated by yorick-z configure script on $curdate
+# $cursystem
+
+PKG_I=$ILIST
+OBJS=$OLIST
+PKG_DEPLIBS=$DEPLIBS
+PKG_I_START=yorz.i
+
+ZLIB_INC=$ZLIB_INC
+PNG_INC=$PNG_INC
+JPEG_INC=$JPEG_INC
+AVCODEC_INC=$AVCODEC_INC
+
+EOF
+
+#----------------------------------------------------------------------
+# clean up, issue warning if compiler gave fishy output
+rm -f cfg cfg.c cfg.o cfg.i
+if test $debug = yes; then
+  for f in cfg.[0-9]; do
+    if grep ... $f >/dev/null 2>&1; then   # or use test -s $f ?
+      echo "WARNING - check compiler message in $f"
+    else # remove empty files
+      rm -f $f
+    fi
+  done
+else
+  rm -f cfg.[0-9]
+fi
+
+echo ""
+echo "================ yorick-z configuration completed ================"
+exit $fatality
