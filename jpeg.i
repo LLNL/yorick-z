@@ -1,5 +1,5 @@
 /*
- * $Id: jpeg.i,v 1.1 2005-09-18 22:07:07 dhmunro Exp $
+ * $Id: jpeg.i,v 1.1.1.1 2005-09-18 22:07:07 dhmunro Exp $
  * yorick interface to jpeg image compression
  * ftp://ftp.uu.net/graphics/jpeg/      http://www.faqs.org/faqs/jpeg-faq/
  */

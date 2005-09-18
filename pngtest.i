@@ -1,5 +1,5 @@
 /*
- * $Id: pngtest.i,v 1.1 2005-09-18 22:07:10 dhmunro Exp $
+ * $Id: pngtest.i,v 1.1.1.1 2005-09-18 22:07:10 dhmunro Exp $
  * test yorick png interface
  */
 /* Copyright (c) 2005, The Regents of the University of California.

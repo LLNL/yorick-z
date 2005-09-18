@@ -1,5 +1,5 @@
 /*
- * $Id: spng.c,v 1.1 2005-09-18 22:07:10 dhmunro Exp $
+ * $Id: spng.c,v 1.1.1.1 2005-09-18 22:07:10 dhmunro Exp $
  * simplified png interface, directed to scientific data storage
  */
 /* Copyright (c) 2005, The Regents of the University of California.

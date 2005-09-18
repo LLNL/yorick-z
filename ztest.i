@@ -1,5 +1,5 @@
 /*
- * $Id: ztest.i,v 1.1 2005-09-18 22:07:11 dhmunro Exp $
+ * $Id: ztest.i,v 1.1.1.1 2005-09-18 22:07:11 dhmunro Exp $
  * test yorick zlib interface
  */
 /* Copyright (c) 2005, The Regents of the University of California.

@@ -1,5 +1,5 @@
 /*
- * $Id: maked.i,v 1.1 2005-09-18 22:07:11 dhmunro Exp $
+ * $Id: maked.i,v 1.1.1.1 2005-09-18 22:07:11 dhmunro Exp $
  * make .doc files for yorz package
  */
 /* Copyright (c) 2005, The Regents of the University of California.

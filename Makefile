@@ -1,5 +1,5 @@
 # Makefile for yorick-z package
-# $Id: Makefile,v 1.1 2005-09-18 22:07:11 dhmunro Exp $
+# $Id: Makefile,v 1.1.1.1 2005-09-18 22:07:11 dhmunro Exp $
 
 # run configure script to create Makeyorz and fill in following macros
 

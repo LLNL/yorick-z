@@ -1,5 +1,5 @@
 /*
- * $Id: yavcodec.h,v 1.1 2005-09-18 22:07:11 dhmunro Exp $
+ * $Id: yavcodec.h,v 1.1.1.1 2005-09-18 22:07:11 dhmunro Exp $
  * subset of avcodec.h actually used by ympeg.c
  */
 #ifndef AVCODEC_H

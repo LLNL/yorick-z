@@ -1,4 +1,4 @@
-/* $Id: check.i,v 1.1 2005-09-18 22:07:11 dhmunro Exp $
+/* $Id: check.i,v 1.1.1.1 2005-09-18 22:07:11 dhmunro Exp $
  */
 plug_dir, ["."];
 write, "\n\n---------------------------------------checking zlib.i";

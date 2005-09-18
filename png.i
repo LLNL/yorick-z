@@ -1,5 +1,5 @@
 /*
- * $Id: png.i,v 1.1 2005-09-18 22:07:09 dhmunro Exp $
+ * $Id: png.i,v 1.1.1.1 2005-09-18 22:07:09 dhmunro Exp $
  * yorick interface to libpng image compression (www.libpng.org)
  */
 /* Copyright (c) 2005, The Regents of the University of California.
