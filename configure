@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: configure,v 1.1 2005-09-18 22:07:11 dhmunro Exp $
+# $Id: configure,v 1.2 2006-03-25 04:00:49 dhmunro Exp $
 
 echo ""
 echo "================ begin yorick-z configuration ===================="
@@ -350,7 +350,7 @@ if test -n "$av_path"; then
     AVCODEC_LIB="-L$av_path -lavcodec"
   fi
   av_dlopen=no
-else
+elif test -z "$AVCODEC_LIB"; then
   AVCODEC_LIB=-lavcodec
 fi
 
