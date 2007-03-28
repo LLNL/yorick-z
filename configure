@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: configure,v 1.2 2006-03-25 04:00:49 dhmunro Exp $
+# $Id: configure,v 1.3 2007-03-28 05:41:18 dhmunro Exp $
 
 echo ""
 echo "================ begin yorick-z configuration ===================="
@@ -422,7 +422,7 @@ fi
 if test $has_png = yes; then
   DEPLIBS="$PNG_LIB $ZLIB_LIB"
   cat >>yorz.i <<EOF
-autoload, "png.i", png_read, png_write, png_scale, png_map, png_pcal;
+autoload, "png.i", png, png_read, png_write, png_scale, png_map, png_pcal;
 EOF
 elif test $has_zlib = yes; then
   DEPLIBS="$ZLIB_LIB"
@@ -432,7 +432,7 @@ fi
 if test $has_jpeg = yes; then
   DEPLIBS="$JPEG_LIB $DEPLIBS"
   cat >>yorz.i <<EOF
-autoload, "jpeg.i", jpeg_read, jpeg_write;
+autoload, "jpeg.i", jpeg, jpeg_read, jpeg_write;
 EOF
 fi
 if test $has_avcodec = yes; then

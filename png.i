@@ -1,5 +1,5 @@
 /*
- * $Id: png.i,v 1.1 2005-09-18 22:07:09 dhmunro Exp $
+ * $Id: png.i,v 1.2 2007-03-28 05:41:18 dhmunro Exp $
  * yorick interface to libpng image compression (www.libpng.org)
  */
 /* Copyright (c) 2005, The Regents of the University of California.
@@ -9,6 +9,18 @@
  */
 
 if (!is_void(plug_in)) plug_in, "yorz";
+
+func png(name)
+/* DOCUMENT png, name
+     writes the picture in the current graphics window to the png file
+     NAME, or to NAME+".png" is NAME does not end in ".png".
+   SEE ALSO: jpeg, pdf, eps, hcps
+ */
+{
+  if (strpart(name,-3:0)!=".png") name+= ".png";
+  png_write, name, rgb_read();
+  return name;
+}
 
 func png_read(filename, &depth, &nfo, type=, quiet=)
 /* DOCUMENT image = png_read(filename)
