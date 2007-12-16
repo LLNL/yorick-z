@@ -1,5 +1,5 @@
 /*
- * $Id: jpeg.i,v 1.2 2007-03-28 05:41:18 dhmunro Exp $
+ * $Id: jpeg.i,v 1.3 2007-12-16 00:04:54 dhmunro Exp $
  * yorick interface to jpeg image compression
  * ftp://ftp.uu.net/graphics/jpeg/      http://www.faqs.org/faqs/jpeg-faq/
  */
@@ -11,11 +11,11 @@
 
 if (!is_void(plug_in)) plug_in, "yorz";
 
-func jpeg(name)
-/* DOCUMENT jpeg, name
+func jpeg2(name)
+/* DOCUMENT jpeg2, name
      writes the picture in the current graphics window to the jpeg file
      NAME, or to NAME+".jpg" is NAME does not end in ".jpg".
-   SEE ALSO: jpeg, pdf, eps, hcps
+   SEE ALSO: jpeg, png, pdf, eps, hcps
  */
 {
   if (strpart(name,-3:0)!=".jpg") name+= ".jpg";
