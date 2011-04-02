@@ -1,0 +1,26 @@
+# generic build files (probably also in global .gitignore)
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.a
+*.so
+*~
+/#*
+core
+a.out
+
+# yorick-specific build files, see also .gitignore in subdirectories
+Makeyorz
+cfg*
+*.doc
+*.a.dep
+ywrap.c
+yinit.c
+yorick
+Y_HOME.txt
+relocate/
+
+# yorick-z specific build files
+yorz.i
