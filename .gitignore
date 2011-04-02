@@ -12,7 +12,6 @@ core
 a.out
 
 # yorick-specific build files, see also .gitignore in subdirectories
-Makeyorz
 cfg*
 *.doc
 *.a.dep
@@ -23,4 +22,5 @@ Y_HOME.txt
 relocate/
 
 # yorick-z specific build files
+Makeyorz
 yorz.i

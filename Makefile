@@ -8,6 +8,7 @@ Y_EXE=
 Y_EXE_PKGS=
 Y_EXE_HOME=
 Y_EXE_SITE=
+Y_HOME_PKG=
 
 # ----------------------------------------------------- optimization flags
 
