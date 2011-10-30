@@ -1,0 +1,85 @@
+---
+layout: default
+headline: yorick-z package
+---
+<p class="sectop">Back to <a href="index.html">library index</a>.</p>
+<p class="sectop">Package mpeg (in mpeg.i) - </p>
+<p class="sectop">Index of documented functions or symbols:</p>
+<div class="ndex0s">
+  <div class="ndex1">
+    <h3>M</h3>
+    <p><a href="mpeg.html#mpeg_close">mpeg_close</a></p>
+  </div>
+  <div class="ndex2">
+    <p><a href="mpeg.html#mpeg_create">mpeg_create</a></p>
+    <p><a href="mpeg.html#mpeg_movie">mpeg_movie</a></p>
+  </div>
+  <div class="ndex3">
+    <p><a href="mpeg.html#mpeg_write">mpeg_write</a></p>
+  </div>
+</div>
+<div class="docblock"><a name="mpeg_close"></a><h3>mpeg_close</h3>
+  <pre>DOCUMENT mpeg_close, mpeg
+
+Close the mpeg file corresponding to the MPEG encoder.  Actually,
+this merely destroys the reference to the encoder; the file will
+remain open until the final reference is destroyed.
+</pre>
+  <p>SEE ALSO: <a href="mpeg.html#mpeg_create">mpeg_create</a>, <a href="mpeg.html#mpeg_write">mpeg_write</a>, <a href="mpeg.html#mpeg_movie">mpeg_movie</a></p>
+</div>
+<div class="docblock"><a name="mpeg_create"></a><h3>mpeg_create</h3>
+  <pre>DOCUMENT mpeg = mpeg_create(filename)
+      or mpeg = mpeg_create(filename, params)
+
+Create an mpeg-1 movie file FILENAME.  Write frames with mpeg_write,
+close with mpeg_close.  The return value is an mpeg encoder object.
+
+If given, PARAMS is [bit_rate, frame_rate, gop_size, max_b_frames]
+   which default to [ 400000,      25,       10,         1       ]
+The rates are per second, the gop_size is the number of frames
+before an I-frame is emitted, and max_b_frames is the largest
+number of consecutive B-frames.  (The third kind of frame is the
+P-frame; generally, the encoder emits B-frames until it is forced
+to emit a P-frame by max_b_frames, or an I-frame by gop_size.  The
+smaller these numbers, the higher quality the movie, but the lower
+the compression.)  Any of the four PARAMS values may be zero to
+get the default value, except for max_b_frames, which should be <0
+to get the default value.
+</pre>
+  <p>SEE ALSO: <a href="mpeg.html#mpeg_write">mpeg_write</a>, <a href="mpeg.html#mpeg_close">mpeg_close</a>, <a href="mpeg.html#mpeg_movie">mpeg_movie</a></p>
+</div>
+<div class="docblock"><a name="mpeg_movie"></a><h3>mpeg_movie</h3>
+  <pre>DOCUMENT mpeg_movie, filename, draw_frame
+      or mpeg_movie, filename, draw_frame, time_limit
+      or mpeg_movie, filename, draw_frame, time_limit, min_interframe
+
+An extension of the movie function (#include "movie.i") that generates
+an mpeg file FILENAME.  The other arguments are the same as the movie
+function (which see).  The draw_frame function is:
+
+  func draw_frame(i)
+  {
+    // Input argument i is the frame number.
+    // draw_frame should return non-zero if there are more
+    // frames in this movie.  A zero return will stop the
+    // movie.
+    // draw_frame must NOT include any fma command if the
+    // making_movie variable is set (movie sets this variable
+    // before calling draw_frame)
+  }
+</pre>
+  <p>SEE ALSO: movie, <a href="mpeg.html#mpeg_create">mpeg_create</a>, <a href="mpeg.html#mpeg_write">mpeg_write</a>, <a href="mpeg.html#mpeg_close">mpeg_close</a></p>
+</div>
+<div class="docblock"><a name="mpeg_write"></a><h3>mpeg_write</h3>
+  <pre>DOCUMENT mpeg_write, mpeg, rgb
+
+Write a frame RGB into the mpeg file corresponding to the MPEG
+encoder returned by mpeg_create. RGB is a 3-by-width-by-height
+array of char.  Every frame must have the same width and height.
+To finish the movie and close the file, call mpeg_close.
+
+Note that you may have trouble rendering the resulting mpeg
+file if the image width and height are note multiples of 8.
+</pre>
+  <p>SEE ALSO: <a href="mpeg.html#mpeg_create">mpeg_create</a>, <a href="mpeg.html#mpeg_close">mpeg_close</a>, <a href="mpeg.html#mpeg_movie">mpeg_movie</a></p>
+</div>

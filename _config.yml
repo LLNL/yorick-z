@@ -1,0 +1,8 @@
+prefix: "http://dhmunro.github.com/yorick-doc"
+pkgname: "yorick-z"
+pkgtitle: "Support for libz, png, jpeg, and mpeg compression"
+
+keywords: yorick, documentation, manual
+description: Yorick Documentation
+
+exclude: gh-pages, gh-pages.src, ydoc.pl, README.md
