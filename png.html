@@ -9,14 +9,15 @@ headline: "Support for libz, png, jpeg, and mpeg compression"
   <div class="ndex1">
     <h3>P</h3>
     <p><a href="png.html#png2">png2</a></p>
+    <p><a href="png.html#png_map">png_map</a></p>
   </div>
   <div class="ndex2">
-    <p><a href="png.html#png_map">png_map</a></p>
     <p><a href="png.html#png_pcal">png_pcal</a></p>
+    <p><a href="png.html#png_read">png_read</a></p>
   </div>
   <div class="ndex3">
-    <p><a href="png.html#png_read">png_read</a></p>
     <p><a href="png.html#png_scale">png_scale</a></p>
+    <p><a href="png.html#png_write">png_write</a></p>
   </div>
 </div>
 <div class="docblock"><a name="png2"></a><h3>png2</h3>
@@ -33,7 +34,7 @@ headline: "Support for libz, png, jpeg, and mpeg compression"
   png_read, or an array of reals as for *nfo(4) (see png_read).
   You can use png_pcal to compute an NFO mapping tailored to IMAGE.
 </pre>
-  <p>SEE ALSO: <a href="png.html#png_pcal">png_pcal</a>, <a href="png.html#png_scale">png_scale</a>, <a href="png.html#png_read">png_read</a>, png_write</p>
+  <p>SEE ALSO: <a href="png.html#png_pcal">png_pcal</a>, <a href="png.html#png_scale">png_scale</a>, <a href="png.html#png_read">png_read</a>, <a href="png.html#png_write">png_write</a></p>
 </div>
 <div class="docblock"><a name="png_pcal"></a><h3>png_pcal</h3>
   <pre>DOCUMENT pcal = png_pcal(image)
@@ -91,7 +92,7 @@ KEYWORDS: cmin=, cmax=, res=, log=
   You can specify log=1 to force log scaling if image is all
   positive or all negative.
 </pre>
-  <p>SEE ALSO: <a href="png.html#png_scale">png_scale</a>, png_write, <a href="png.html#png_read">png_read</a></p>
+  <p>SEE ALSO: <a href="png.html#png_scale">png_scale</a>, <a href="png.html#png_write">png_write</a>, <a href="png.html#png_read">png_read</a></p>
 </div>
 <div class="docblock"><a name="png_read"></a><h3>png_read</h3>
   <pre>DOCUMENT image = png_read(filename)
@@ -139,7 +140,7 @@ is as if png_scale(image, nfo, type=type), which scales the raw image
 according to the information in pCAL, or is a no-op if pCAL does
 not exist.
 </pre>
-  <p>SEE ALSO: png_write, <a href="png.html#png_scale">png_scale</a></p>
+  <p>SEE ALSO: <a href="png.html#png_write">png_write</a>, <a href="png.html#png_scale">png_scale</a></p>
 </div>
 <div class="docblock"><a name="png_scale"></a><h3>png_scale</h3>
   <pre>DOCUMENT image = png_scale(raw_image, nfo, type=type)
@@ -148,5 +149,41 @@ not exist.
   parameter may be either the array of pointers returned by
   png_read, or an array of reals as for *nfo(4) (see png_read).
 </pre>
-  <p>SEE ALSO: <a href="png.html#png_map">png_map</a>, <a href="png.html#png_read">png_read</a>, png_write</p>
+  <p>SEE ALSO: <a href="png.html#png_map">png_map</a>, <a href="png.html#png_read">png_read</a>, <a href="png.html#png_write">png_write</a></p>
+</div>
+<div class="docblock"><a name="png_write"></a><h3>png_write</h3>
+  <pre>DOCUMENT png_write, filename, image
+      or png_write, filename, image, depth, nfo
+
+Write png file FILENAME containing IMAGE at the specified DEPTH.
+The default DEPTH is 8 bits.  For grayscale IMAGE, 1<=DEPTH<=16,
+otherwise depth is 8 or 16.  If NFO is specified, it is an
+array of pointers as described in the help for png_read.  You can
+optionally specify the same information as keywords:
+  palette=[[r0,g0,b0],[r1,g1,b1],...]
+  alpha=[a0,a1,...] if image is simple 2D and palette specified
+  trns=value       if image is gray (no palette)
+       [r,g,b]     if image is color
+       illegal if image has alpha channel
+  bkgd=value or [r,g,b] suggested background color
+    note that bkgd and trns have the same range and meaning as a
+    pixel value, in particular, for a pseudocolor, a palette index
+  pcal=[x0,x1,max,eqtype,p0,p1,p2,p3,...]
+  pcals=[calibration_name, unit_name]  as for pCAL (see png_read)
+  scal=[wide,high,sunit]  as for sCAL (see png_read)
+  phys=[n_xpix,n_ypix,per_meter]  as for pHYs (see png_read)
+  text=[[key1,text1],[key1,text1],...]
+    recognized keys are: Title, Author, Description, Copyright,
+    Creation Time, Software, Disclaimer, Warning, Source (a device),
+    and Comment
+  time=string  modification time (timestamp() is default)
+When both NFO and keywords are supplied, the keywords override any
+corresponding value in nfo.
+
+If IMAGE has a data type other than short or char, a default pCAL
+will be supplied if it is a simple grayscale (2D) image.  If DEPTH
+is not supplied, it defaults to 8 if IMAGE is type char and/or if
+a palette is supplied, or to 16 otherwise.
+</pre>
+  <p>SEE ALSO: <a href="png.html#png_read">png_read</a>, <a href="png.html#png_map">png_map</a></p>
 </div>
