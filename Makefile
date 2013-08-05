@@ -80,10 +80,10 @@ yorz.doc: $(PKG_I)
 	$(Y_EXE) -batch ./maked.i $(PKG_I)
 
 install:: yorz.doc
-	$(YNSTALL) yorz.doc "$(Y_SITE)/doc"
+	$(YNSTALL) yorz.doc "$(DEST_Y_SITE)/doc"
 
 uninstall::
-	rm -f "$(Y_SITE)/doc/yorz.doc"
+	rm -f "$(DEST_Y_SITE)/doc/yorz.doc"
 
 distclean::
 	rm -f Makeyorz yorz.i
